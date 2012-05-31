@@ -15,10 +15,33 @@ Puppet::Type.newtype(:vc_vm) do
     defaultto(:present)
   end
 
-  newparam(:path) do
-    desc "The path to the VM, including VM name.  The immediate parent must be a Datacenter."
+  newparam(:dcpath) do
+    desc "The path to the parent Datacenter where the VM is hosted."
     isnamevar
   end
+
+  newparam(:name) do
+    desc "Name of the VM."
+    isnamevar
+  end
+
+  # parse_title() in Puppet source lib/puppet/resource.rb explains
+  # how this is used:
+  # for each [regexp, symbols_and_lambdas] pair
+  #   regexp is matched against title
+  #   each matched group is then processed with the corresponding lambda
+  #   the result is assigned to the param with the corresponding symbol
+  def self.title_patterns
+    identity = lambda{|x| x}
+    [
+      # regexp,             symbols_and_lambdas
+      [ /^(.+\/)([^\/]+)$/, [
+                              [ :dcpath, identity ],
+                              [ :name,   identity ],
+                            ]
+      ]
+    ]
+  end 
 
   newparam(:connection) do
     desc "The connectivity to vCenter."
@@ -35,7 +58,7 @@ Puppet::Type.newtype(:vc_vm) do
 
   autorequire(:vc_datacenter) do
     # autorequire immediate parent Datacenter
-    Puppet::Modules::VCenter::TypeBase.get_immediate_parent(self[:path])
+    Puppet::Modules::VCenter::TypeBase.get_immediate_parent(self[:dcpath])
   end
 
 end

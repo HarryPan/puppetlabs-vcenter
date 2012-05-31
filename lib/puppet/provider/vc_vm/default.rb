@@ -26,7 +26,7 @@ Puppet::Type.type(:vc_vm).provide(:vc_vm) do
                 :pool => compute_resource.resourcePool).wait_for_completion
     else
       raise Puppet::Modules::VCenter::ProviderBase::PathNotFoundError.new(
-        "Invalid path for VM #{@resource[:path]}", __LINE__, __FILE__)
+        "Invalid path for VM #{@dcpath + @vmname}", __LINE__, __FILE__)
     end
   end
 
@@ -35,13 +35,14 @@ Puppet::Type.type(:vc_vm).provide(:vc_vm) do
   end
 
   def exists?
-    parent_path, slash, @vmname = @resource[:path].rpartition('/')
-    @root_folder = get_root_folder(@resource[:connection])
+    @dcpath ||= @resource[:dcpath]
+    @vmname ||= @resource[:name]
+    @root_folder ||= get_root_folder(@resource[:connection])
     begin
       @immediate_parent ||= find_immediate_parent(
                     @root_folder,
-                    parse_path(parent_path + slash),
-                    "Invalid path for VM #{@resource[:path]}")
+                    parse_path(@dcpath),
+                    "Invalid path for VM #{@dcpath + @vmname}")
       # the immediate parent of a VM must be a Datacenter
       if not @immediate_parent.is_datacenter?
         @immediate_parent = nil
@@ -50,7 +51,7 @@ Puppet::Type.type(:vc_vm).provide(:vc_vm) do
     rescue Puppet::Modules::VCenter::ProviderBase::PathNotFoundError
       return false
     end
-    @vm = @immediate_parent.real_container.vmFolder.find(@vmname)
+    @vm ||= @immediate_parent.real_container.vmFolder.find(@vmname)
     !!@vm
   end
 end
