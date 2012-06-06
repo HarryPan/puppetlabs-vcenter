@@ -19,8 +19,6 @@ module Puppet::Modules
 
       # connect to vCenter and get the rootFolder.
       def get_root_folder(connection_url)
-        # FIXME handle parsing errors (URI.parse?)
-        # TODO handle wrong connection_url?
         # TODO insecure?
         user, pwd, host = connection_url.split(%r{[:@]})
         conn = RbVmomi::VIM.connect(:host => host,
@@ -31,7 +29,6 @@ module Puppet::Modules
       end
 
       def parse_path(path)
-        # FIXME for now path must be in the form of '/foo/bar/last/'
         path[1..path.size-2].split('/')
       end
 
