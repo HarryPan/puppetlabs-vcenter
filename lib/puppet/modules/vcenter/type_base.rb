@@ -7,7 +7,7 @@ module Puppet::Modules
       def TypeBase.get_immediate_parent(path)
         pathname = Pathname.new(path)
         if !pathname.root?
-          pathname.parent
+          pathname.parent.to_s
         else
           nil
         end
@@ -23,7 +23,7 @@ module Puppet::Modules
             elsif path.size == 1
               raise ArgumentError, "path must specify more than '/'."
             end
-            super
+            super(path)
           end
         end
       end
@@ -31,7 +31,7 @@ module Puppet::Modules
       def TypeBase.get_munge_path_block
         lambda do |path|
           if path.end_with?('/')
-            super
+            super(path)
           else
             path + '/'
           end
@@ -41,7 +41,7 @@ module Puppet::Modules
       def TypeBase.get_validate_connection_block
         lambda do |value|
           if /^[^:|^@]+:[^:|^@]+@[^:|^@]+$/.match(value)
-            super
+            super(value)
           else
             raise ArgumentError, "Invalid connection string.  Should be username:password@hostname."
           end
